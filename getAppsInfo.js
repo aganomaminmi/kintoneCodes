@@ -1,4 +1,5 @@
 var appIds = [];
+var appsSettings = [];
 
 kintone.api(kintone.api.url('/k/v1/apps', true), 'GET', {}, function(resp) {
   // success
@@ -7,20 +8,22 @@ kintone.api(kintone.api.url('/k/v1/apps', true), 'GET', {}, function(resp) {
     appIds[i] = apps[i].appId;
   }
 
-  appIds.forEach( index => {
+  appIds.forEach( ( value, index ) => {
 
     kintone.api(kintone.api.url('/k/v1/app/settings', true), 'GET', {
-      'app': index,
+      'app': value,
       'lang': 'ja'
-    }, function(resp) {
+    }, function(response) {
       // success
-      console.log(resp);
+      console.log(response);
+      appsSettings[index] = response;
     }, function(error) {
       // error
       console.log(error);
     });
   });
-  
+  console.log(appsSettings);
+
 }, function(error) {
   // error
   console.log(error);
