@@ -3,10 +3,10 @@
   
   var updatedIds = [];
   var existingRows = [];
- 
-  kintone.events.on('app.record.edit.change.considered_properties', function(event) {
+  
+    kintone.events.on('app.record.edit.change.considered_properties', function(event) {
     existingRows = event.record.considered_properties.value.map( value => value.id );
-    
+    console.log(existingRows);
   });
   
   kintone.events.on('app.record.edit.change.status_before_decision', function(event) {
@@ -15,19 +15,28 @@
     if ( updatedIds.indexOf(changedId) == -1 && changedId !== null) {
       updatedIds.unshift(changedId);
     }
+    
+    console.log(updatedIds);
 
   });
   
   kintone.events.on('app.record.edit.submit.success', function(event) {
     var tableValues = event.record.considered_properties.value.map( value => value.id );
-    var addedRow = tableValues.filter( value => existingRows.indexOf(value) == -1 );
-    var unupdatedIds = tableValues.filter( value => updatedIds.indexOf(value) == -1);
-    var uneditedIds = unupdatedIds.filter( value => addedRow.indexOf(value) == -1);
+    console.log(existingRows);
+
+    var unupdatedIds = tableValues.filter( value => updatedIds.indexOf(value) == -1 );
+    var addedRow = [];
+    if ( existingRows.length !== 0 ) {
+      console.log("row is added.");
+      addedRow = tableValues.filter( value => existingRows.indexOf(value) == -1 );
+    }
+    var uneditedIds = unupdatedIds.filter( value => addedRow.indexOf(value) == -1 );
     
-    // console.log(tableValues + "が保存されている行です");
-    // console.log(addedRow + "が追加された行です");
-    // console.log(unupdatedIds + "がアップデートされていないか、追加された行です");
-    // console.log(uneditedIds + "が追加もされず編集されていない行です");
+    console.log(tableValues + "が保存されている行です");
+    console.log(addedRow + "が追加された行です");
+    console.log(updatedIds + "がアップデートされた行です");
+    console.log(unupdatedIds + "がアップデートされていないか、追加された行です");
+    console.log(uneditedIds + "が追加もされず編集されていない行です");
     
     var tableUpdateParams = {
       "app": 8,
@@ -42,21 +51,28 @@
     // リクエストパラメータの行を生成します
     updatedIds.forEach( value => {
       tableUpdateParams.record.considered_properties.value.push({ "id": value, "value": { "status_update_date": getFormatedDate() } });
+      console.log("add updatedIds");
     });
     uneditedIds.forEach( value => {
       tableUpdateParams.record.considered_properties.value.push({ "id": value });
+      console.log("add uneditedIds");
     });
     addedRow.forEach( value => {
       tableUpdateParams.record.considered_properties.value.push({ "id": value, "value": { "status_update_date": getFormatedDate() } });
+      console.log("add addedRows");
     });
     
+    console.log(tableUpdateParams);
     kintone.api(kintone.api.url('/k/v1/record', true), 'PUT', tableUpdateParams).then(function(response) {
       console.log(response);
       updatedIds = [];
       existingRows = [];
       location.reload(true);
     }, function(error) {
+      updatedIds = [];
+      existingRows = [];
       console.log(error);
+      
     });
 
   });
